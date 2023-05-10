@@ -36,7 +36,7 @@ TASK_DEFINITION
 
     efs_volume_configuration {
       file_system_id          = var.efs_id
-      root_directory          = "/uploads"
+      root_directory          = "/"
       transit_encryption = "DISABLED"
     }
   }
@@ -80,8 +80,8 @@ resource "aws_ecs_service" "api" {
   name = "production-api"
   cluster                            = aws_ecs_cluster.this.id
   task_definition                    = aws_ecs_task_definition.this.arn
-  desired_count                      = 0
-  deployment_minimum_healthy_percent = 0
+  desired_count                      = 1
+  deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
   launch_type                        = "FARGATE"
 

@@ -23,49 +23,23 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 
 # IAM user for github action to push image on ECS and reload ECS service
 
-resource "aws_iam_policy" "assume_role_policy" {
-  name        = "assume-role-policy"
-  policy      = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = "sts:*"
-        Resource = "*"
-      }
-    ]
-  })
-}
-
 resource "aws_iam_user" "user" {
   name = "github-action"
 }
 
-resource "aws_iam_user_policy_attachment" "assume_role_policy_attachment" {
+
+resource "aws_iam_user_policy_attachment" "ecr_policy" {
   user       = aws_iam_user.user.name
-  policy_arn = aws_iam_policy.assume_role_policy.arn
+  policy_arn = aws_iam_policy.ecr_policy.arn
+}
+
+resource "aws_iam_user_policy_attachment" "ecs_policy" {
+  user       = aws_iam_user.user.name
+  policy_arn = aws_iam_policy.ecs_policy.arn
 }
 
 resource "aws_iam_access_key" "access_key" {
   user = aws_iam_user.user.name
-}
-
-# IAM role for github action
-
-resource "aws_iam_role" "ecs_role" {
-  name = "ecs_role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "ecs.amazonaws.com"
-        }
-        Effect = "Allow"
-      }
-    ]
-  })
 }
 
 resource "aws_iam_policy" "ecr_policy" {
@@ -116,7 +90,8 @@ resource "aws_iam_policy" "ecs_policy" {
           "ecs:StopTask",
           "ecs:UpdateContainerAgent",
           "ecs:UpdateContainerInstancesState",
-          "ecs:UpdateService"
+          "ecs:UpdateService",
+          "ecs:DescribeServices"
         ]
         Resource = "*"
         Effect = "Allow"
@@ -133,14 +108,4 @@ resource "aws_iam_policy" "ecs_policy" {
       }
     ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_attachment" {
-  policy_arn = aws_iam_policy.ecr_policy.arn
-  role       = aws_iam_role.ecs_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_policy_attachment" {
-  policy_arn = aws_iam_policy.ecs_policy.arn
-  role       = aws_iam_role.ecs_role.name
 }
